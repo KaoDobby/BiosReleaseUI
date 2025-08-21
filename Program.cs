@@ -72,14 +72,13 @@ namespace BiosReleaseUI
 
         private void InitializeUi()
         {
-            int stepBtnHeight = 85;
-            int groupBoxHeight = 170;
             int stepFontSize = 17;
 
             Text = "BIOS Release Tool";
             Width = 1140;
             Height = 1380;
             Font = new Drawing.Font("Segoe UI", 10);
+            AutoScaleMode = WinForms.AutoScaleMode.Dpi;
             BackColor = Drawing.Color.White;
 
             var statusPanel = new WinForms.Panel
@@ -114,22 +113,18 @@ namespace BiosReleaseUI
                 Dock = WinForms.DockStyle.Top,
                 RowCount = 4,
                 ColumnCount = 1,
-                Height = 440,
                 Padding = new WinForms.Padding(10),
-                AutoSize = true
+                AutoSize = true,
+                AutoSizeMode = WinForms.AutoSizeMode.GrowAndShrink
             };
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, groupBoxHeight));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
 
             checkFilesButton = CreateStyledButton("① Check Material Files", Drawing.Color.FromArgb(220, 230, 250), Drawing.Color.DarkBlue, true, stepFontSize);
             runMainCodeButton = CreateStyledButton("③ Execute Make_csv_file.bat", Drawing.Color.FromArgb(230, 250, 230), Drawing.Color.DarkGreen, true, stepFontSize);
             openReleaseNoteButton = CreateStyledButton("④ Open BIOS_RELEASE_NOTE.xlsm", Drawing.Color.FromArgb(250, 240, 200), Drawing.Color.SaddleBrown, true, stepFontSize);
-
-            checkFilesButton.Height = stepBtnHeight;
-            runMainCodeButton.Height = stepBtnHeight;
-            openReleaseNoteButton.Height = stepBtnHeight;
 
             runMainCodeButton.Enabled = false;
             openReleaseNoteButton.Enabled = false;
@@ -137,8 +132,7 @@ namespace BiosReleaseUI
             var platformGroupBox = new WinForms.GroupBox
             {
                 Text = "② Platform Selection",
-                Height = groupBoxHeight,
-                Dock = WinForms.DockStyle.Top,
+                Dock = WinForms.DockStyle.Fill,
                 Padding = new WinForms.Padding(10),
                 Font = new Drawing.Font("Segoe UI", 12, Drawing.FontStyle.Bold)
             };
@@ -156,10 +150,9 @@ namespace BiosReleaseUI
                 Dock = WinForms.DockStyle.Fill,
                 DropDownStyle = WinForms.ComboBoxStyle.DropDownList,
                 Font = new Drawing.Font("Segoe UI", 13),
-                Height = stepBtnHeight,
                 DrawMode = WinForms.DrawMode.OwnerDrawFixed
             };
-            platformComboBox.ItemHeight = stepBtnHeight;
+            platformComboBox.ItemHeight = platformComboBox.Font.Height + 10;
             platformComboBox.DrawItem += (s, e) =>
             {
                 if (e.Index < 0) return;
@@ -180,7 +173,6 @@ namespace BiosReleaseUI
                 Text = "Confirm Platform",
                 Dock = WinForms.DockStyle.Fill,
                 Font = new Drawing.Font("Segoe UI", stepFontSize, Drawing.FontStyle.Bold),
-                Height = 40,
                 BackColor = Drawing.Color.LightGoldenrodYellow,
                 FlatStyle = WinForms.FlatStyle.Flat
             };
@@ -229,14 +221,13 @@ namespace BiosReleaseUI
                 BackColor = Drawing.Color.Transparent
             };
             logLayout.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 100F));
-            logLayout.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, 80F));
+            logLayout.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
             logLayout.Controls.Add(logHost, 0, 0);
 
             clearLogButton = new WinForms.Button
             {
                 Text = "Clear Log",
-                Width = 155,
-                Height = 45,
+                AutoSize = true,
                 Anchor = WinForms.AnchorStyles.Bottom | WinForms.AnchorStyles.Right,
                 BackColor = Drawing.Color.FromArgb(255, 230, 230),
                 FlatStyle = WinForms.FlatStyle.Flat
@@ -246,8 +237,7 @@ namespace BiosReleaseUI
             saveLogButton = new WinForms.Button
             {
                 Text = "Save Log",
-                Width = 155,
-                Height = 45,
+                AutoSize = true,
                 Anchor = WinForms.AnchorStyles.Bottom | WinForms.AnchorStyles.Right,
                 BackColor = Drawing.Color.FromArgb(230, 255, 230),
                 FlatStyle = WinForms.FlatStyle.Flat
@@ -277,8 +267,7 @@ namespace BiosReleaseUI
             var button = new WinForms.Button
             {
                 Text = text,
-                Dock = WinForms.DockStyle.Top,
-                Height = 50,
+                Dock = WinForms.DockStyle.Fill,
                 FlatStyle = WinForms.FlatStyle.Flat,
                 BackColor = backColor,
                 ForeColor = foreColor,
