@@ -303,6 +303,15 @@ namespace BiosReleaseUI
             confirmPlatformButton.Enabled = allFilesExist;
         }
 
+        private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor)
+        {
+            var button = new WinForms.Button { Text = text, Dock = WinForms.DockStyle.Top, Height = 40, FlatStyle = WinForms.FlatStyle.Flat, BackColor = backColor };
+            button.FlatAppearance.BorderColor = Drawing.Color.Gray;
+            button.MouseEnter += (s, e) => button.BackColor = WinForms.ControlPaint.Light(backColor);
+            button.MouseLeave += (s, e) => button.BackColor = backColor;
+            return button;
+        }
+
         private void AppendLog(string message)
         {
             var paragraph = new WpfDocuments.Paragraph { Margin = new System.Windows.Thickness(0) };
@@ -446,8 +455,7 @@ namespace BiosReleaseUI
 
             if (!string.IsNullOrEmpty(detectedArch))
             {
-                string expectedFile = detectedArch.ToUpper()
-                switch
+                string expectedFile = detectedArch.ToUpper() switch
                 {
                     "AMD" => "*BIOS*.xlsm",
                     "INTEL" => "*BIOS*.xlsm",
@@ -456,7 +464,7 @@ namespace BiosReleaseUI
 
                 if (!string.IsNullOrEmpty(expectedFile))
                 {
-                    string fullPath = Path.Combine(preDumpPath, defaultNote);
+                    string fullPath = Path.Combine(preDumpPath, expectedFile);
                     if (File.Exists(fullPath))
                     {
                         notePath = fullPath;
