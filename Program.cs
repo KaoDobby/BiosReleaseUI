@@ -14,6 +14,7 @@ using Drawing = System.Drawing;
 // WPF using naming
 using WpfControls = System.Windows.Controls;
 using WpfMedia = System.Windows.Media;
+using WpfImaging = System.Windows.Media.Imaging;
 
 using BiosReleaseUI.Services;
 
@@ -197,19 +198,28 @@ namespace BiosReleaseUI
 
             wpfLogBox = new WpfControls.RichTextBox
             {
-                Background = new WpfMedia.SolidColorBrush(WpfMedia.Color.FromArgb(50, 255, 255, 255)),
+                Background = WpfMedia.Brushes.Transparent,
                 Foreground = WpfMedia.Brushes.Black,
                 FontFamily = new WpfMedia.FontFamily("Consolas"),
                 FontSize = 14,
                 IsReadOnly = true,
                 BorderThickness = new System.Windows.Thickness(0),
                 Padding = new System.Windows.Thickness(4),
+                Opacity = 0.8
             };
+
+            string imagePath = EnvironmentPaths.GetBackgroundImagePath();
+            var grid = new WpfControls.Grid
+            {
+                Background = new WpfMedia.ImageBrush(new WpfImaging.BitmapImage(new Uri(imagePath)))
+            };
+            grid.Children.Add(wpfLogBox);
 
             logHost = new WinFormsIntegration.ElementHost
             {
                 Dock = WinForms.DockStyle.Fill,
-                Child = wpfLogBox,
+                Child = grid,
+                BackColor = Drawing.Color.Transparent,
                 BackColorTransparent = true
             };
 
