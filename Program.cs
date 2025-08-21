@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 // WinForms using naming
 using WinForms = System.Windows.Forms;
@@ -13,44 +13,64 @@ using Drawing = System.Drawing;
 
 // WPF using naming
 using WpfControls = System.Windows.Controls;
-using WpfDocuments = System.Windows.Documents;
 using WpfMedia = System.Windows.Media;
+
+using BiosReleaseUI.Services;
 
 namespace BiosReleaseUI
 {
     public class BiosReleaseUI : WinForms.Form
     {
         private WinForms.Label statusLabel;
-        private WinForms.Button checkFilesButton, runMainCodeButton, openReleaseNoteButton, aboutButton, clearLogButton;
+        private WinForms.Button checkFilesButton, runMainCodeButton, openReleaseNoteButton, aboutButton, clearLogButton, saveLogButton;
         private WinForms.ComboBox platformComboBox;
         private WinForms.Button confirmPlatformButton;
         private string selectedPlatform = "";
         private string selectedPlatformConfirmed = "";
         private bool allFilesExist = false;
-        private string projectRoot, preDumpPath;
+        private readonly string projectRoot;
+        private readonly string preDumpPath;
         private WinForms.Panel logBackgroundPanel;
         private Drawing.Image? logBackgroundImage;
         private WinFormsIntegration.ElementHost logHost;
         private WpfControls.RichTextBox wpfLogBox;
         private string detectedArch = "";
+        private readonly ILogService logService;
+        private readonly MaterialChecker materialChecker;
+        private readonly ScriptExecutor scriptExecutor;
 
         public BiosReleaseUI()
         {
-            string? fullPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.FullName;
-            projectRoot = fullPath ?? "";
-            preDumpPath = Path.Combine(projectRoot, "Pre_Dump");
-            string imagePath = Path.Combine(projectRoot, "BiosReleaseUI", "bg.jpg");
-
-            // Set UI STEP HEIGHTS
-            int stepBtnHeight = 85; // Step Height
-            int groupBoxHeight = 170;
-            int stepFontSize = 17;
+            projectRoot = EnvironmentPaths.GetProjectRoot();
+            preDumpPath = EnvironmentPaths.GetPreDumpPath();
+            string imagePath = EnvironmentPaths.GetBackgroundImagePath();
 
             if (File.Exists(imagePath))
             {
                 try { logBackgroundImage = Drawing.Image.FromFile(imagePath); }
                 catch (Exception ex) { WinForms.MessageBox.Show("Background image input failure : " + ex.Message); }
             }
+
+            InitializeUi();
+
+            logService = new RichTextBoxLogService(wpfLogBox);
+            materialChecker = new MaterialChecker();
+            scriptExecutor = new ScriptExecutor();
+
+            checkFilesButton.Click += CheckFilesButton_Click;
+            runMainCodeButton.Click += RunMainCodeButton_Click;
+            openReleaseNoteButton.Click += OpenReleaseNoteButton_Click;
+            aboutButton.Click += AboutButton_Click;
+            confirmPlatformButton.Click += ConfirmPlatformButton_Click;
+            clearLogButton.Click += (s, e) => logService.Clear();
+            saveLogButton.Click += SaveLogButton_Click;
+        }
+
+        private void InitializeUi()
+        {
+            int stepBtnHeight = 85;
+            int groupBoxHeight = 170;
+            int stepFontSize = 17;
 
             Text = "BIOS Release Tool";
             Width = 1140;
@@ -79,10 +99,9 @@ namespace BiosReleaseUI
                 Dock = WinForms.DockStyle.Right,
                 FlatStyle = WinForms.FlatStyle.Flat,
                 BackColor = Drawing.Color.LightGray,
-                Font = new Drawing.Font("Segoe UI", 10, Drawing.FontStyle.Bold)
+                Font = new Drawing.Font("Segoe UI", 10, Drawing.FontStyle.Bold),
             };
             aboutButton.FlatAppearance.BorderSize = 0;
-            aboutButton.Click += AboutButton_Click;
             statusPanel.Controls.Add(statusLabel);
             statusPanel.Controls.Add(aboutButton);
 
@@ -91,11 +110,10 @@ namespace BiosReleaseUI
                 Dock = WinForms.DockStyle.Top,
                 RowCount = 4,
                 ColumnCount = 1,
-                Height = 440, // = 90 + 140 + 90 + 90 + Padding
+                Height = 440,
                 Padding = new WinForms.Padding(10),
                 AutoSize = true
             };
-            // Update Height
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, groupBoxHeight));
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
@@ -105,7 +123,6 @@ namespace BiosReleaseUI
             runMainCodeButton = CreateStyledButton("③ Execute Make_csv_file.bat", Drawing.Color.FromArgb(230, 250, 230), Drawing.Color.DarkGreen, true, stepFontSize);
             openReleaseNoteButton = CreateStyledButton("④ Open BIOS_RELEASE_NOTE.xlsm", Drawing.Color.FromArgb(250, 240, 200), Drawing.Color.SaddleBrown, true, stepFontSize);
 
-            // Set Height with same
             checkFilesButton.Height = stepBtnHeight;
             runMainCodeButton.Height = stepBtnHeight;
             openReleaseNoteButton.Height = stepBtnHeight;
@@ -116,7 +133,7 @@ namespace BiosReleaseUI
             var platformGroupBox = new WinForms.GroupBox
             {
                 Text = "② Platform Selection",
-                Height = groupBoxHeight, // Step2 Height
+                Height = groupBoxHeight,
                 Dock = WinForms.DockStyle.Top,
                 Padding = new WinForms.Padding(10),
                 Font = new Drawing.Font("Segoe UI", 12, Drawing.FontStyle.Bold)
@@ -138,28 +155,22 @@ namespace BiosReleaseUI
                 Height = stepBtnHeight,
                 DrawMode = WinForms.DrawMode.OwnerDrawFixed
             };
-            
-            platformComboBox.ItemHeight = stepBtnHeight ;
+            platformComboBox.ItemHeight = stepBtnHeight;
             platformComboBox.DrawItem += (s, e) =>
             {
                 if (e.Index < 0) return;
                 e.DrawBackground();
-
                 string text = platformComboBox.Items[e.Index]?.ToString() ?? "";
                 using var brush = new Drawing.SolidBrush(e.ForeColor);
-
-                // format to center
-                var format = new StringFormat
+                var format = new Drawing.StringFormat
                 {
-                    Alignment = StringAlignment.Center,     
-                    LineAlignment = StringAlignment.Center   
+                    Alignment = Drawing.StringAlignment.Center,
+                    LineAlignment = Drawing.StringAlignment.Center
                 };
-                e.Graphics.DrawString(text, e.Font ?? platformComboBox.Font ?? SystemFonts.DefaultFont, brush, e.Bounds, format);
-
+                e.Graphics.DrawString(text, e.Font ?? platformComboBox.Font ?? Drawing.SystemFonts.DefaultFont, brush, e.Bounds, format);
                 e.DrawFocusRectangle();
-
             };
-            
+
             confirmPlatformButton = new WinForms.Button
             {
                 Text = "Confirm Platform",
@@ -168,21 +179,6 @@ namespace BiosReleaseUI
                 Height = 40,
                 BackColor = Drawing.Color.LightGoldenrodYellow,
                 FlatStyle = WinForms.FlatStyle.Flat
-            };
-
-            confirmPlatformButton.Click += (s, e) =>
-            {
-                if (platformComboBox.SelectedItem != null)
-                {
-                    selectedPlatform = platformComboBox.SelectedItem.ToString() ?? "";
-                    selectedPlatformConfirmed = selectedPlatform;
-                    AppendLog($"[Selected Platform] → {selectedPlatform}");
-                    UpdateRunButtonState();
-                }
-                else
-                {
-                    WinForms.MessageBox.Show("Please select a platform.");
-                }
             };
 
             platformLayout.Controls.Add(platformComboBox, 0, 0);
@@ -227,7 +223,6 @@ namespace BiosReleaseUI
                 RowCount = 2,
                 BackColor = Drawing.Color.Transparent
             };
-
             logLayout.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 100F));
             logLayout.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, 80F));
             logLayout.Controls.Add(logHost, 0, 0);
@@ -241,10 +236,9 @@ namespace BiosReleaseUI
                 BackColor = Drawing.Color.FromArgb(255, 230, 230),
                 FlatStyle = WinForms.FlatStyle.Flat
             };
-            clearLogButton.Click += (s, e) => wpfLogBox.Document.Blocks.Clear();
             clearLogButton.Margin = new WinForms.Padding(10, 5, 10, 5);
 
-            var saveLogButton = new WinForms.Button
+            saveLogButton = new WinForms.Button
             {
                 Text = "Save Log",
                 Width = 155,
@@ -253,7 +247,6 @@ namespace BiosReleaseUI
                 BackColor = Drawing.Color.FromArgb(230, 255, 230),
                 FlatStyle = WinForms.FlatStyle.Flat
             };
-            saveLogButton.Click += SaveLogButton_Click;
             saveLogButton.Margin = new WinForms.Padding(10, 5, 10, 5);
 
             var buttonPanel = new WinForms.FlowLayoutPanel
@@ -268,10 +261,6 @@ namespace BiosReleaseUI
             logLayout.Controls.Add(buttonPanel, 0, 1);
 
             logBackgroundPanel.Controls.Add(logLayout);
-
-            checkFilesButton.Click += CheckFilesButton_Click;
-            runMainCodeButton.Click += RunMainCodeButton_Click;
-            openReleaseNoteButton.Click += OpenReleaseNoteButton_Click;
 
             Controls.Add(logBackgroundPanel);
             Controls.Add(controlPanel);
@@ -288,7 +277,7 @@ namespace BiosReleaseUI
                 FlatStyle = WinForms.FlatStyle.Flat,
                 BackColor = backColor,
                 ForeColor = foreColor,
-                Font = new Drawing.Font("Segoe UI", fontSize, bold ? Drawing.FontStyle.Bold : Drawing.FontStyle.Regular)
+                Font = new Drawing.Font("Segoe UI", fontSize, bold ? Drawing.FontStyle.Bold : Drawing.FontStyle.Regular),
             };
             button.FlatAppearance.BorderColor = Drawing.Color.Gray;
             button.MouseEnter += (s, e) => button.BackColor = WinForms.ControlPaint.Light(backColor);
@@ -303,162 +292,71 @@ namespace BiosReleaseUI
             confirmPlatformButton.Enabled = allFilesExist;
         }
 
-        private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor)
+        private async void RunMainCodeButton_Click(object? sender, EventArgs e)
         {
-            var button = new WinForms.Button { Text = text, Dock = WinForms.DockStyle.Top, Height = 40, FlatStyle = WinForms.FlatStyle.Flat, BackColor = backColor };
-            button.FlatAppearance.BorderColor = Drawing.Color.Gray;
-            button.MouseEnter += (s, e) => button.BackColor = WinForms.ControlPaint.Light(backColor);
-            button.MouseLeave += (s, e) => button.BackColor = backColor;
-            return button;
-        }
+            string batPath = Path.Combine(preDumpPath, Constants.MakeCsvScript);
+            if (!File.Exists(batPath))
+            {
+                WinForms.MessageBox.Show("Make_csv_file.bat not found");
+                return;
+            }
 
-        private void AppendLog(string message)
-        {
-            var paragraph = new WpfDocuments.Paragraph { Margin = new System.Windows.Thickness(0) };
-            var brush = WpfMedia.Brushes.Black;
-            if (message.Contains("\u2714")) brush = WpfMedia.Brushes.Green;
-            else if (message.Contains("\u2718") || message.Contains("ERROR")) brush = WpfMedia.Brushes.Brown;
-            else if (message.StartsWith("[")) brush = WpfMedia.Brushes.Blue;
-            paragraph.Inlines.Add(new WpfDocuments.Run(message) { Foreground = brush });
-            paragraph.Inlines.Add(new WpfDocuments.LineBreak());
-            wpfLogBox.Document.Blocks.Add(paragraph);
-            wpfLogBox.ScrollToEnd();
+            runMainCodeButton.Enabled = false;
+            openReleaseNoteButton.Enabled = false;
+            logService.Append("[Executing Main Script...]");
+
+            await scriptExecutor.RunScriptAsync(batPath, line =>
+            {
+                if (line.StartsWith("ARCH=", StringComparison.OrdinalIgnoreCase))
+                {
+                    string arch = line.Substring(5).Trim().ToUpper();
+                    detectedArch = arch;
+                    logService.Append($"[Detected Platform Vender] → {arch}");
+                }
+                else
+                {
+                    logService.Append(line);
+                }
+            });
+
+            logService.Append($"[Next Excel File Target] → {detectedArch}");
+            logService.Append("[DONE]");
+            runMainCodeButton.Enabled = true;
+            openReleaseNoteButton.Enabled = true;
         }
 
         private void CheckFilesButton_Click(object? sender, EventArgs e)
         {
-            wpfLogBox.Document.Blocks.Clear();
-            bool allExist = true;
+            logService.Clear();
+            var result = materialChecker.CheckMaterials(preDumpPath);
+            foreach (var msg in result.Messages)
+                logService.Append(msg);
 
-            string materialFolder = Path.Combine(preDumpPath, "Material");
-            if (!Directory.Exists(materialFolder))
-            {
-                AppendLog("\u2718 Missing folder: Material");
-                allExist = false;
-            }
-            else
-            {
-                // txt , bin check
-                string[] txtFiles = Directory.GetFiles(materialFolder, "*.txt");
-                string[] binFiles = Directory.GetFiles(materialFolder, "*.bin");
+            statusLabel.Text = result.AllExist ? "Status: ✅ All files found" : "Status: ⚠ Incomplete files";
+            selectedPlatform = "";
+            selectedPlatformConfirmed = "";
+            allFilesExist = result.AllExist;
+            platformComboBox.Items.Clear();
+            platformComboBox.Items.AddRange(result.Platforms.ToArray());
+            if (result.Platforms.Count > 0) platformComboBox.SelectedIndex = 0;
 
-                if (txtFiles.Length != 1)
-                {
-                    AppendLog($"\u2718 Found {txtFiles.Length} TXT files. Exactly 1 expected, please check Material folder");
-                    allExist = false;
-                }
-                else
-                {
-                    AppendLog($"\u2714 Found {txtFiles.Length} TXT file");
-                }
-
-                if (binFiles.Length != 1)
-                {
-                    AppendLog($"\u2718 Found {binFiles.Length} BIN files. Exactly 1 expected, please check Material folder");
-                    allExist = false;
-                }
-                else
-                {
-                    AppendLog($"\u2714 Found {binFiles.Length} BIN file");
-                }
-
-                // XML check
-                string XMLFolder = Path.Combine(materialFolder, "XML");
-                string[] xmlFiles = Directory.GetFiles(XMLFolder, "*.xml");
-                if (xmlFiles.Length > 0)
-                {
-                    AppendLog($"\u2714 Found {xmlFiles.Length} XML files");
-                    var platforms = xmlFiles.Select(f => Path.GetFileNameWithoutExtension(f))
-                                            .Where(name => Regex.IsMatch(name, @"^[A-Z]\d{2}$"))
-                                            .Distinct()
-                                            .ToList();
-
-                    platformComboBox.Items.Clear();
-                    platformComboBox.Items.AddRange(platforms.ToArray());
-                    if (platforms.Count > 0) platformComboBox.SelectedIndex = 0;
-                }
-                else
-                {
-                    AppendLog("\u2718 No XML files found");
-                    allExist = false;
-                }
-            }
-
-            statusLabel.Text = allExist ? "Status: \u2705 All files found" : "Status: \u26a0 Incomplete files";
-            allFilesExist = allExist;
-            openReleaseNoteButton.Enabled = false; // [MOD] Step4永遠不能跳過前面
-            runMainCodeButton.Enabled = false;     // [MOD] Step3 也一樣
-            platformComboBox.Enabled = allExist;   // [MOD]
-            confirmPlatformButton.Enabled = allExist; // [MOD]
-            UpdateRunButtonState(); // [MOD]
-        }
-
-        private void RunMainCodeButton_Click(object? sender, EventArgs e)
-        {
-            string batPath = Path.Combine(preDumpPath, "Make_csv_file.bat");
-            if (!File.Exists(batPath)) { WinForms.MessageBox.Show("Make_csv_file.bat not found"); return; }
-
-            runMainCodeButton.Enabled = false;
             openReleaseNoteButton.Enabled = false;
-            AppendLog("[Executing Main Script...]");
-
-            Task.Run(() =>
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = batPath,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    WorkingDirectory = preDumpPath,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8,
-                    CreateNoWindow = true
-                };
-
-                using (var proc = Process.Start(psi))
-                {
-                    if (proc == null) { Invoke(() => AppendLog("\u2718 Failed to start process")); return; }
-                    while (!proc.StandardOutput.EndOfStream)
-                    {
-                       var line = proc.StandardOutput.ReadLine();
-                        if (line != null && line.StartsWith("ARCH=", StringComparison.OrdinalIgnoreCase))
-                        {
-                            string arch = line.Substring(5).Trim().ToUpper();
-                            detectedArch = arch;
-                            Invoke(() => AppendLog($"[Detected Platform Vender] → {arch}"));
-                        }
-                        else
-                        {
-                            Invoke(() => AppendLog(line ?? "[null]"));
-                        }
-
-                    }
-                }
-
-                Invoke(() => AppendLog($"[Next Excel File Target] → {detectedArch}"));
-
-                Invoke(() =>
-                {
-                    AppendLog("[DONE]");
-                    runMainCodeButton.Enabled = true;
-                    openReleaseNoteButton.Enabled = true;
-                });
-            });
+            runMainCodeButton.Enabled = false;
+            UpdateRunButtonState();
         }
 
         private void OpenReleaseNoteButton_Click(object? sender, EventArgs e)
         {
-            string[] defaultNote = Directory.GetFiles(preDumpPath, "*BIOS*.xlsm");
-            AppendLog($"Release note:{string.Join(", ", defaultNote)}");
-            string notePath = defaultNote.FirstOrDefault()?? "";
+            string[] defaultNote = Directory.GetFiles(preDumpPath, Constants.ReleaseNotePattern);
+            logService.Append($"Release note:{string.Join(", ", defaultNote)}");
+            string notePath = defaultNote.FirstOrDefault() ?? "";
 
             if (!string.IsNullOrEmpty(detectedArch))
             {
                 string expectedFile = detectedArch.ToUpper() switch
                 {
-                    "AMD" => "*BIOS*.xlsm",
-                    "INTEL" => "*BIOS*.xlsm",
+                    "AMD" => Constants.ReleaseNotePattern,
+                    "INTEL" => Constants.ReleaseNotePattern,
                     _ => ""
                 };
 
@@ -471,7 +369,7 @@ namespace BiosReleaseUI
                     }
                     else
                     {
-                        AppendLog($"[Warning] Expected Excel not found: {expectedFile}, fallback to default.");
+                        logService.Append($"[Warning] Expected Excel not found: {expectedFile}, fallback to default.");
                     }
                 }
             }
@@ -482,9 +380,24 @@ namespace BiosReleaseUI
                 WinForms.MessageBox.Show("Release note file not found.", "Error", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Error);
         }
 
+        private void ConfirmPlatformButton_Click(object? sender, EventArgs e)
+        {
+            if (platformComboBox.SelectedItem != null)
+            {
+                selectedPlatform = platformComboBox.SelectedItem.ToString() ?? "";
+                selectedPlatformConfirmed = selectedPlatform;
+                logService.Append($"[Selected Platform] → {selectedPlatform}");
+                UpdateRunButtonState();
+            }
+            else
+            {
+                WinForms.MessageBox.Show("Please select a platform.");
+            }
+        }
+
         private void AboutButton_Click(object? sender, EventArgs e)
         {
-            WinForms.MessageBox.Show("BIOS Release Tool\nAuthor:\n\tJarvey\n\tWilliam\n\tDobby\n\n\ud83c\udf89 You're awesome for checking the About page! \ud83c\udf89", "About", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Information);
+            WinForms.MessageBox.Show("BIOS Release Tool\nAuthor:\n\tJarvey\n\tWilliam\n\tDobby\n\n🎉 You're awesome for checking the About page! 🎉", "About", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Information);
         }
 
         private void SaveLogButton_Click(object? sender, EventArgs e)
@@ -501,8 +414,7 @@ namespace BiosReleaseUI
             {
                 try
                 {
-                    var textRange = new WpfDocuments.TextRange(wpfLogBox.Document.ContentStart, wpfLogBox.Document.ContentEnd);
-                    File.WriteAllText(dialog.FileName, textRange.Text, Encoding.UTF8);
+                    File.WriteAllText(dialog.FileName, logService.GetText(), Encoding.UTF8);
                     WinForms.MessageBox.Show("Log saved successfully!", "Success", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
