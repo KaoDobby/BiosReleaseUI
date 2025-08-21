@@ -50,6 +50,10 @@ namespace BiosReleaseUI
                 try { logBackgroundImage = Drawing.Image.FromFile(imagePath); }
                 catch (Exception ex) { WinForms.MessageBox.Show("Background image input failure : " + ex.Message); }
             }
+            else
+            {
+                WinForms.MessageBox.Show("Background image not found. Using default background color.");
+            }
 
             InitializeUi();
 
@@ -195,6 +199,7 @@ namespace BiosReleaseUI
                 Dock = WinForms.DockStyle.Fill,
                 BackgroundImage = logBackgroundImage,
                 BackgroundImageLayout = WinForms.ImageLayout.Zoom,
+                BackColor = logBackgroundImage == null ? Drawing.Color.LightGray : Drawing.Color.Transparent,
                 Padding = new WinForms.Padding(10)
             };
 

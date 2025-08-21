@@ -7,8 +7,7 @@ namespace BiosReleaseUI.Services
     {
         public static string GetProjectRoot()
         {
-            string? fullPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.FullName;
-            return fullPath ?? string.Empty;
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
 
         public static string GetPreDumpPath()
@@ -18,7 +17,7 @@ namespace BiosReleaseUI.Services
 
         public static string GetBackgroundImagePath()
         {
-            return Path.Combine(GetProjectRoot(), "BiosReleaseUI", "bg.jpg");
+            return Path.Combine(GetProjectRoot(), "bg.jpg");
         }
     }
 }
