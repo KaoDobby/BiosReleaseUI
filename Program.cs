@@ -21,19 +21,19 @@ namespace BiosReleaseUI
 {
     public class BiosReleaseUI : WinForms.Form
     {
-        private WinForms.Label statusLabel;
-        private WinForms.Button checkFilesButton, runMainCodeButton, openReleaseNoteButton, aboutButton, clearLogButton, saveLogButton;
-        private WinForms.ComboBox platformComboBox;
-        private WinForms.Button confirmPlatformButton;
+        private WinForms.Label statusLabel = null!;
+        private WinForms.Button checkFilesButton = null!, runMainCodeButton = null!, openReleaseNoteButton = null!, aboutButton = null!, clearLogButton = null!, saveLogButton = null!;
+        private WinForms.ComboBox platformComboBox = null!;
+        private WinForms.Button confirmPlatformButton = null!;
         private string selectedPlatform = "";
         private string selectedPlatformConfirmed = "";
         private bool allFilesExist = false;
         private readonly string projectRoot;
         private readonly string preDumpPath;
-        private WinForms.Panel logBackgroundPanel;
+        private WinForms.Panel logBackgroundPanel = null!;
         private Drawing.Image? logBackgroundImage;
-        private WinFormsIntegration.ElementHost logHost;
-        private WpfControls.RichTextBox wpfLogBox;
+        private WinFormsIntegration.ElementHost logHost = null!;
+        private WpfControls.RichTextBox wpfLogBox = null!;
         private string detectedArch = "";
         private readonly ILogService logService;
         private readonly MaterialChecker materialChecker;
@@ -53,17 +53,17 @@ namespace BiosReleaseUI
 
             InitializeUi();
 
-            logService = new RichTextBoxLogService(wpfLogBox);
+            logService = new RichTextBoxLogService(wpfLogBox!);
             materialChecker = new MaterialChecker();
             scriptExecutor = new ScriptExecutor();
 
-            checkFilesButton.Click += CheckFilesButton_Click;
-            runMainCodeButton.Click += RunMainCodeButton_Click;
-            openReleaseNoteButton.Click += OpenReleaseNoteButton_Click;
-            aboutButton.Click += AboutButton_Click;
-            confirmPlatformButton.Click += ConfirmPlatformButton_Click;
-            clearLogButton.Click += (s, e) => logService.Clear();
-            saveLogButton.Click += SaveLogButton_Click;
+            checkFilesButton!.Click += CheckFilesButton_Click;
+            runMainCodeButton!.Click += RunMainCodeButton_Click;
+            openReleaseNoteButton!.Click += OpenReleaseNoteButton_Click;
+            aboutButton!.Click += AboutButton_Click;
+            confirmPlatformButton!.Click += ConfirmPlatformButton_Click;
+            clearLogButton!.Click += (s, e) => logService.Clear();
+            saveLogButton!.Click += SaveLogButton_Click;
         }
 
         private void InitializeUi()
