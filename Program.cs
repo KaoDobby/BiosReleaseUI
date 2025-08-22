@@ -79,9 +79,10 @@ namespace BiosReleaseUI
             int stepFontSize = 17;
 
             Text = "BIOS Release Tool";
-            Width = 1140;
-            Height = 1380;
-            MinimumSize = new Drawing.Size(1140, 1380);
+            // Dynamically size to fit the available screen area
+            var workingArea = WinForms.Screen.PrimaryScreen.WorkingArea;
+            Width = workingArea.Width;
+            Height = workingArea.Height;
             Font = new Drawing.Font("Segoe UI", 10);
             AutoScaleMode = WinForms.AutoScaleMode.Dpi;
             BackColor = Drawing.Color.White;
