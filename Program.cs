@@ -81,19 +81,26 @@ namespace BiosReleaseUI
             const int groupBoxHeight = 170;
 
             Text = "BIOS Release Tool";
-            // Use a fixed size for consistent layout across displays
+            // Use a fixed, non-resizable window to prevent layout scaling issues
             Width = 1140;
             Height = 1380;
             StartPosition = WinForms.FormStartPosition.CenterScreen;
             Font = new Drawing.Font("Segoe UI", 10);
             AutoScaleMode = WinForms.AutoScaleMode.None;
             BackColor = Drawing.Color.White;
+            FormBorderStyle = WinForms.FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            MinimumSize = new Drawing.Size(Width, Height);
+            MaximumSize = new Drawing.Size(Width, Height);
 
             var statusPanel = new WinForms.Panel
             {
                 Dock = WinForms.DockStyle.Top,
                 Height = 50,
-                BackColor = Drawing.Color.LightSteelBlue
+                BackColor = Drawing.Color.LightSteelBlue,
+                AutoSize = false,
+                MinimumSize = new Drawing.Size(0, 50),
+                MaximumSize = new Drawing.Size(int.MaxValue, 50)
             };
             statusLabel = new WinForms.Label
             {
