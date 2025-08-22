@@ -78,6 +78,7 @@ namespace BiosReleaseUI
             Text = "BIOS Release Tool";
             Width = 1140;
             Height = 1380;
+            MinimumSize = new Drawing.Size(1140, 1380);
             Font = new Drawing.Font("Segoe UI", 10);
             AutoScaleMode = WinForms.AutoScaleMode.Dpi;
             BackColor = Drawing.Color.White;
@@ -118,10 +119,10 @@ namespace BiosReleaseUI
                 AutoSize = true,
                 AutoSizeMode = WinForms.AutoSizeMode.GrowAndShrink
             };
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Percent, 25F));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
 
             checkFilesButton = CreateStyledButton("① Check Material Files", Drawing.Color.FromArgb(220, 230, 250), Drawing.Color.DarkBlue, true, stepFontSize);
             runMainCodeButton = CreateStyledButton("③ Execute Make_csv_file.bat", Drawing.Color.FromArgb(230, 250, 230), Drawing.Color.DarkGreen, true, stepFontSize);
