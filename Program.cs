@@ -77,6 +77,8 @@ namespace BiosReleaseUI
         private void InitializeUi()
         {
             int stepFontSize = 17;
+            const int stepBtnHeight = 85;
+            const int groupBoxHeight = 170;
 
             Text = "BIOS Release Tool";
             // Use a fixed size for consistent layout across displays
@@ -120,20 +122,19 @@ namespace BiosReleaseUI
                 RowCount = 4,
                 ColumnCount = 1,
                 Padding = new WinForms.Padding(10),
-                AutoSize = true,
-                AutoSizeMode = WinForms.AutoSizeMode.GrowAndShrink
+                AutoSize = false
             };
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
-            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.AutoSize));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, groupBoxHeight));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
+            controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
 
-            checkFilesButton = CreateStyledButton("① Check Material Files", Drawing.Color.FromArgb(220, 230, 250), Drawing.Color.DarkBlue, true, stepFontSize);
-            runMainCodeButton = CreateStyledButton("③ Execute Make_csv_file.bat", Drawing.Color.FromArgb(230, 250, 230), Drawing.Color.DarkGreen, true, stepFontSize);
+            checkFilesButton = CreateStyledButton("① Check Material Files", Drawing.Color.FromArgb(220, 230, 250), Drawing.Color.DarkBlue, true, stepFontSize, stepBtnHeight);
+            runMainCodeButton = CreateStyledButton("③ Execute Make_csv_file.bat", Drawing.Color.FromArgb(230, 250, 230), Drawing.Color.DarkGreen, true, stepFontSize, stepBtnHeight);
             runButtonDefaultBackColor = runMainCodeButton.BackColor;
             runButtonOverlayLabel = CreateOverlayLabel();
             runMainCodeButton.Controls.Add(runButtonOverlayLabel);
-            openReleaseNoteButton = CreateStyledButton("④ Open BIOS_RELEASE_NOTE.xlsm", Drawing.Color.FromArgb(250, 240, 200), Drawing.Color.SaddleBrown, true, stepFontSize);
+            openReleaseNoteButton = CreateStyledButton("④ Open BIOS_RELEASE_NOTE.xlsm", Drawing.Color.FromArgb(250, 240, 200), Drawing.Color.SaddleBrown, true, stepFontSize, stepBtnHeight);
 
             runMainCodeButton.Enabled = false;
             openReleaseNoteButton.Enabled = false;
@@ -145,7 +146,8 @@ namespace BiosReleaseUI
                 Text = "② Platform Selection",
                 Dock = WinForms.DockStyle.Fill,
                 Padding = new WinForms.Padding(10),
-                Font = new Drawing.Font("Segoe UI", 12, Drawing.FontStyle.Bold)
+                Font = new Drawing.Font("Segoe UI", 12, Drawing.FontStyle.Bold),
+                Height = groupBoxHeight
             };
             var platformLayout = new WinForms.TableLayoutPanel
             {
@@ -299,12 +301,13 @@ namespace BiosReleaseUI
             Controls.Add(statusPanel);
         }
 
-        private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor, Drawing.Color foreColor, bool bold = false, int fontSize = 11)
+        private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor, Drawing.Color foreColor, bool bold = false, int fontSize = 11, int height = 0)
         {
             var button = new WinForms.Button
             {
                 Text = text,
-                Dock = WinForms.DockStyle.Fill,
+                Dock = WinForms.DockStyle.Top,
+                Height = height,
                 FlatStyle = WinForms.FlatStyle.Flat,
                 BackColor = backColor,
                 ForeColor = foreColor,
