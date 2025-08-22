@@ -39,6 +39,7 @@ namespace BiosReleaseUI
         private readonly ILogService logService;
         private readonly MaterialChecker materialChecker;
         private readonly ScriptExecutor scriptExecutor;
+        private readonly WinForms.ToolTip toolTip = new();
 
         public BiosReleaseUI()
         {
@@ -131,6 +132,8 @@ namespace BiosReleaseUI
             runMainCodeButton.Enabled = false;
             openReleaseNoteButton.Enabled = false;
 
+            string disabledHint = "Steps 2–4 will remain disabled until the required files exist.";
+
             var platformGroupBox = new WinForms.GroupBox
             {
                 Text = "② Platform Selection",
@@ -182,6 +185,10 @@ namespace BiosReleaseUI
             platformLayout.Controls.Add(platformComboBox, 0, 0);
             platformLayout.Controls.Add(confirmPlatformButton, 1, 0);
             platformGroupBox.Controls.Add(platformLayout);
+
+            toolTip.SetToolTip(platformGroupBox, disabledHint);
+            toolTip.SetToolTip(runMainCodeButton, disabledHint);
+            toolTip.SetToolTip(openReleaseNoteButton, disabledHint);
 
             controlPanel.Controls.Add(checkFilesButton, 0, 0);
             controlPanel.Controls.Add(platformGroupBox, 0, 1);
@@ -341,8 +348,18 @@ namespace BiosReleaseUI
             var result = materialChecker.CheckMaterials(preDumpPath);
             foreach (var msg in result.Messages)
                 logService.Append(msg);
-
-            statusLabel.Text = result.AllExist ? "Status: ✅ All files found" : "Status: ⚠ Incomplete files";
+            if (result.AllExist)
+            {
+                statusLabel.Text = "Status: ✅ All files found";
+            }
+            else
+            {
+                var missingItems = result.Messages.Where(m => m.StartsWith("\u2718")).ToList();
+                string missingText = missingItems.Count > 0 ? string.Join("; ", missingItems) : "Incomplete files";
+                statusLabel.Text = $"Status: ⚠ {missingText}";
+                if (missingItems.Count > 0)
+                    WinForms.MessageBox.Show(string.Join("\n", missingItems), "Missing Materials", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Warning);
+            }
             selectedPlatform = "";
             selectedPlatformConfirmed = "";
             allFilesExist = result.AllExist;
