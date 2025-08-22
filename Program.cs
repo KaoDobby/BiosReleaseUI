@@ -79,28 +79,29 @@ namespace BiosReleaseUI
             int stepFontSize = 17;
             const int stepBtnHeight = 85;
             const int groupBoxHeight = 170;
+            const int statusPanelHeight = 50;
+            int controlPanelHeight = stepBtnHeight * 3 + groupBoxHeight + 20;
 
             Text = "BIOS Release Tool";
-            // Use a fixed, non-resizable window to prevent layout scaling issues
-            Width = 1140;
-            Height = 1380;
+            var workArea = WinForms.Screen.PrimaryScreen.WorkingArea;
+            var defaultSize = new Drawing.Size(
+                Math.Min(1140, workArea.Width - 100),
+                Math.Min(900, workArea.Height - 100));
+            ClientSize = defaultSize;
             StartPosition = WinForms.FormStartPosition.CenterScreen;
             Font = new Drawing.Font("Segoe UI", 10);
             AutoScaleMode = WinForms.AutoScaleMode.None;
             BackColor = Drawing.Color.White;
-            FormBorderStyle = WinForms.FormBorderStyle.FixedSingle;
-            MaximizeBox = false;
-            MinimumSize = new Drawing.Size(Width, Height);
-            MaximumSize = new Drawing.Size(Width, Height);
+            MinimumSize = new Drawing.Size(800, 600);
 
             var statusPanel = new WinForms.Panel
             {
                 Dock = WinForms.DockStyle.Top,
-                Height = 50,
+                Height = statusPanelHeight,
                 BackColor = Drawing.Color.LightSteelBlue,
                 AutoSize = false,
-                MinimumSize = new Drawing.Size(0, 50),
-                MaximumSize = new Drawing.Size(int.MaxValue, 50)
+                MinimumSize = new Drawing.Size(0, statusPanelHeight),
+                MaximumSize = new Drawing.Size(int.MaxValue, statusPanelHeight)
             };
             statusLabel = new WinForms.Label
             {
@@ -129,7 +130,8 @@ namespace BiosReleaseUI
                 RowCount = 4,
                 ColumnCount = 1,
                 Padding = new WinForms.Padding(10),
-                AutoSize = false
+                AutoSize = false,
+                Height = controlPanelHeight
             };
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, groupBoxHeight));
@@ -306,6 +308,12 @@ namespace BiosReleaseUI
             Controls.Add(logBackgroundPanel);
             Controls.Add(controlPanel);
             Controls.Add(statusPanel);
+
+            Resize += (s, e) =>
+            {
+                statusPanel.Height = statusPanelHeight;
+                controlPanel.Height = controlPanelHeight;
+            };
         }
 
         private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor, Drawing.Color foreColor, bool bold = false, int fontSize = 11, int height = 0)
