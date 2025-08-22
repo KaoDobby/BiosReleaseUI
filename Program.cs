@@ -101,7 +101,8 @@ namespace BiosReleaseUI
                 BackColor = Drawing.Color.LightSteelBlue,
                 AutoSize = false,
                 MinimumSize = new Drawing.Size(0, statusPanelHeight),
-                MaximumSize = new Drawing.Size(int.MaxValue, statusPanelHeight)
+                MaximumSize = new Drawing.Size(int.MaxValue, statusPanelHeight),
+                Margin = new WinForms.Padding(0)
             };
             statusLabel = new WinForms.Label
             {
@@ -129,9 +130,10 @@ namespace BiosReleaseUI
                 Dock = WinForms.DockStyle.Top,
                 RowCount = 4,
                 ColumnCount = 1,
-                Padding = new WinForms.Padding(10),
+                Padding = new WinForms.Padding(10, 0, 10, 10),
                 AutoSize = false,
-                Height = controlPanelHeight
+                Height = controlPanelHeight,
+                Margin = new WinForms.Padding(0)
             };
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, stepBtnHeight));
             controlPanel.RowStyles.Add(new WinForms.RowStyle(WinForms.SizeType.Absolute, groupBoxHeight));
