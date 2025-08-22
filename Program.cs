@@ -273,9 +273,10 @@ namespace BiosReleaseUI
 
             logBackgroundPanel.Controls.Add(logLayout);
 
-            Controls.Add(statusPanel);
-            Controls.Add(controlPanel);
+            // Ensure the log panel is at the back so top panels occupy the full width.
             Controls.Add(logBackgroundPanel);
+            Controls.Add(controlPanel);
+            Controls.Add(statusPanel);
         }
 
         private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor, Drawing.Color foreColor, bool bold = false, int fontSize = 11)
