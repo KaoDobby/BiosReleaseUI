@@ -287,6 +287,9 @@ namespace BiosReleaseUI
             buttonPanel.Controls.Add(clearLogButton);
             buttonPanel.Controls.Add(saveLogButton);
             logLayout.Controls.Add(buttonPanel, 0, 1);
+            // Ensure the button panel remains visible above the log host
+            logHost.SendToBack();
+            buttonPanel.BringToFront();
 
             logBackgroundPanel.Controls.Add(logLayout);
 
