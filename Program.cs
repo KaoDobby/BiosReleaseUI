@@ -304,10 +304,13 @@ namespace BiosReleaseUI
 
             logBackgroundPanel.Controls.Add(logLayout);
 
-            // Ensure the log panel is at the back so top panels occupy the full width.
-            Controls.Add(logBackgroundPanel);
-            Controls.Add(controlPanel);
+            // Add panels such that the log panel is at the back, allowing top panels to occupy the full width.
             Controls.Add(statusPanel);
+            Controls.Add(controlPanel);
+            Controls.Add(logBackgroundPanel);
+
+            controlPanel.BringToFront();
+            statusPanel.BringToFront();
 
             Resize += (s, e) =>
             {
