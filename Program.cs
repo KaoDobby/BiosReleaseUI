@@ -272,9 +272,9 @@ namespace BiosReleaseUI
 
             logBackgroundPanel.Controls.Add(logLayout);
 
-            Controls.Add(logBackgroundPanel);
-            Controls.Add(controlPanel);
             Controls.Add(statusPanel);
+            Controls.Add(controlPanel);
+            Controls.Add(logBackgroundPanel);
         }
 
         private WinForms.Button CreateStyledButton(string text, Drawing.Color backColor, Drawing.Color foreColor, bool bold = false, int fontSize = 11)
