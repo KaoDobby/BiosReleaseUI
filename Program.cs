@@ -209,10 +209,15 @@ namespace BiosReleaseUI
             };
 
             string imagePath = EnvironmentPaths.GetBackgroundImagePath();
-            var grid = new WpfControls.Grid
+            var grid = new WpfControls.Grid();
+            if (File.Exists(imagePath))
             {
-                Background = new WpfMedia.ImageBrush(new WpfImaging.BitmapImage(new Uri(imagePath)))
-            };
+                grid.Background = new WpfMedia.ImageBrush(new WpfImaging.BitmapImage(new Uri(imagePath)));
+            }
+            else
+            {
+                grid.Background = WpfMedia.Brushes.LightGray;
+            }
             grid.Children.Add(wpfLogBox);
 
             logHost = new WinFormsIntegration.ElementHost
