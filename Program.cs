@@ -26,6 +26,8 @@ namespace BiosReleaseUI
         private WinForms.Button checkFilesButton = null!, runMainCodeButton = null!, openReleaseNoteButton = null!, aboutButton = null!, clearLogButton = null!, saveLogButton = null!;
         private WinForms.ComboBox platformComboBox = null!;
         private WinForms.Button confirmPlatformButton = null!;
+        private WinForms.Label runButtonOverlayLabel = null!, confirmButtonOverlayLabel = null!;
+        private Drawing.Color runButtonDefaultBackColor, confirmButtonDefaultBackColor, platformComboDefaultBackColor;
         private string selectedPlatform = "";
         private string selectedPlatformConfirmed = "";
         private bool allFilesExist = false;
@@ -126,6 +128,9 @@ namespace BiosReleaseUI
 
             checkFilesButton = CreateStyledButton("① Check Material Files", Drawing.Color.FromArgb(220, 230, 250), Drawing.Color.DarkBlue, true, stepFontSize);
             runMainCodeButton = CreateStyledButton("③ Execute Make_csv_file.bat", Drawing.Color.FromArgb(230, 250, 230), Drawing.Color.DarkGreen, true, stepFontSize);
+            runButtonDefaultBackColor = runMainCodeButton.BackColor;
+            runButtonOverlayLabel = CreateOverlayLabel();
+            runMainCodeButton.Controls.Add(runButtonOverlayLabel);
             openReleaseNoteButton = CreateStyledButton("④ Open BIOS_RELEASE_NOTE.xlsm", Drawing.Color.FromArgb(250, 240, 200), Drawing.Color.SaddleBrown, true, stepFontSize);
 
             runMainCodeButton.Enabled = false;
@@ -154,6 +159,7 @@ namespace BiosReleaseUI
                 Font = new Drawing.Font("Segoe UI", 13),
                 DrawMode = WinForms.DrawMode.OwnerDrawFixed
             };
+            platformComboDefaultBackColor = platformComboBox.BackColor;
             platformComboBox.ItemHeight = platformComboBox.Font.Height + 10;
             platformComboBox.DrawItem += (s, e) =>
             {
@@ -178,6 +184,9 @@ namespace BiosReleaseUI
                 BackColor = Drawing.Color.LightGoldenrodYellow,
                 FlatStyle = WinForms.FlatStyle.Flat
             };
+            confirmButtonDefaultBackColor = confirmPlatformButton.BackColor;
+            confirmButtonOverlayLabel = CreateOverlayLabel();
+            confirmPlatformButton.Controls.Add(confirmButtonOverlayLabel);
 
             platformLayout.Controls.Add(platformComboBox, 0, 0);
             platformLayout.Controls.Add(confirmPlatformButton, 1, 0);
@@ -295,11 +304,51 @@ namespace BiosReleaseUI
             return button;
         }
 
+        private WinForms.Label CreateOverlayLabel()
+        {
+            return new WinForms.Label
+            {
+                Text = string.Empty,
+                Dock = WinForms.DockStyle.Fill,
+                TextAlign = Drawing.ContentAlignment.MiddleCenter,
+                BackColor = Drawing.Color.FromArgb(180, Drawing.Color.LightGray),
+                ForeColor = Drawing.Color.Black,
+                Visible = false,
+                Enabled = false
+            };
+        }
+
         private void UpdateRunButtonState()
         {
-            runMainCodeButton.Enabled = allFilesExist && !string.IsNullOrEmpty(selectedPlatformConfirmed);
+            bool runEnabled = allFilesExist && !string.IsNullOrEmpty(selectedPlatformConfirmed);
+            runMainCodeButton.Enabled = runEnabled;
+            if (!runEnabled)
+            {
+                runMainCodeButton.BackColor = Drawing.Color.LightGray;
+                runButtonOverlayLabel.Text = !allFilesExist ? "Requires Step 1" : "Requires Step 2";
+                runButtonOverlayLabel.Visible = true;
+            }
+            else
+            {
+                runMainCodeButton.BackColor = runButtonDefaultBackColor;
+                runButtonOverlayLabel.Visible = false;
+            }
+
             platformComboBox.Enabled = allFilesExist;
+            platformComboBox.BackColor = allFilesExist ? platformComboDefaultBackColor : Drawing.Color.LightGray;
+
             confirmPlatformButton.Enabled = allFilesExist;
+            if (!allFilesExist)
+            {
+                confirmPlatformButton.BackColor = Drawing.Color.LightGray;
+                confirmButtonOverlayLabel.Text = "Requires Step 1";
+                confirmButtonOverlayLabel.Visible = true;
+            }
+            else
+            {
+                confirmPlatformButton.BackColor = confirmButtonDefaultBackColor;
+                confirmButtonOverlayLabel.Visible = false;
+            }
         }
 
         private async void RunMainCodeButton_Click(object? sender, EventArgs e)
