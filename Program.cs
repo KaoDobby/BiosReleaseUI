@@ -285,10 +285,11 @@ namespace BiosReleaseUI
 
             var buttonPanel = new WinForms.FlowLayoutPanel
             {
-                Dock = WinForms.DockStyle.Right,
+                Dock = WinForms.DockStyle.Bottom,
                 FlowDirection = WinForms.FlowDirection.RightToLeft,
                 Padding = new WinForms.Padding(5, 12, 5, 12),
-                AutoSize = true
+                AutoSize = true,
+                AutoSizeMode = WinForms.AutoSizeMode.GrowAndShrink
             };
             buttonPanel.Controls.Add(clearLogButton);
             buttonPanel.Controls.Add(saveLogButton);
