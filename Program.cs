@@ -34,7 +34,6 @@ namespace BiosReleaseUI
         private readonly string projectRoot;
         private readonly string preDumpPath;
         private WinForms.Panel logBackgroundPanel = null!;
-        private Drawing.Image? logBackgroundImage;
         private WinFormsIntegration.ElementHost logHost = null!;
         private WpfControls.RichTextBox wpfLogBox = null!;
         private string detectedArch = "";
@@ -48,13 +47,7 @@ namespace BiosReleaseUI
             projectRoot = EnvironmentPaths.GetProjectRoot();
             preDumpPath = EnvironmentPaths.GetPreDumpPath();
             string imagePath = EnvironmentPaths.GetBackgroundImagePath();
-
-            if (File.Exists(imagePath))
-            {
-                try { logBackgroundImage = Drawing.Image.FromFile(imagePath); }
-                catch (Exception ex) { WinForms.MessageBox.Show("Background image input failure : " + ex.Message); }
-            }
-            else
+            if (!File.Exists(imagePath))
             {
                 WinForms.MessageBox.Show("Background image not found. Using default background color.");
             }
@@ -216,12 +209,13 @@ namespace BiosReleaseUI
             controlPanel.Controls.Add(runMainCodeButton, 0, 2);
             controlPanel.Controls.Add(openReleaseNoteButton, 0, 3);
 
+            string imagePath = EnvironmentPaths.GetBackgroundImagePath();
+            bool hasImage = File.Exists(imagePath);
+
             logBackgroundPanel = new WinForms.Panel
             {
                 Dock = WinForms.DockStyle.Fill,
-                BackgroundImage = logBackgroundImage,
-                BackgroundImageLayout = WinForms.ImageLayout.Zoom,
-                BackColor = logBackgroundImage == null ? Drawing.Color.LightGray : Drawing.Color.Transparent,
+                BackColor = hasImage ? Drawing.Color.Transparent : Drawing.Color.LightGray,
                 Padding = new WinForms.Padding(10)
             };
 
@@ -237,9 +231,8 @@ namespace BiosReleaseUI
                 Opacity = 0.8
             };
 
-            string imagePath = EnvironmentPaths.GetBackgroundImagePath();
             var grid = new WpfControls.Grid();
-            if (File.Exists(imagePath))
+            if (hasImage)
             {
                 grid.Background = new WpfMedia.ImageBrush(new WpfImaging.BitmapImage(new Uri(imagePath)));
             }
