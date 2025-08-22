@@ -394,6 +394,17 @@ namespace BiosReleaseUI
 
         private void CheckFilesButton_Click(object? sender, EventArgs e)
         {
+            if (!Directory.Exists(preDumpPath))
+            {
+                WinForms.MessageBox.Show(
+                    "Pre_Dump folder not found. Please create Pre_Dump in program directory.",
+                    "Pre_Dump Missing",
+                    WinForms.MessageBoxButtons.OK,
+                    WinForms.MessageBoxIcon.Warning);
+                statusLabel.Text = "Status: ⚠ Pre_Dump folder not found";
+                return;
+            }
+
             logService.Clear();
             var result = materialChecker.CheckMaterials(preDumpPath);
             foreach (var msg in result.Messages)
